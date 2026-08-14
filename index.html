@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شبكة المنيف - تسجيل الدخول</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+body{background:linear-gradient(180deg,#16436B,#0d2b4a);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:15px}
+.frame{width:100%;max-width:410px;background:#e5ebf1;border-radius:24px;padding:25px 18px;box-shadow:0 10px 25px rgba(0,0,0,.3)}
+h1{color:#215182;text-align:center;font-size:22px;margin-bottom:5px}
+.sub{color:#5B79A8;text-align:center;font-weight:700;font-size:13px;margin-bottom:20px}
+.inp{width:100%;height:50px;border:1.5px solid #215182;border-radius:14px;margin-bottom:12px;text-align:center;font-size:16px;font-weight:700;outline:none;background:#fff}
+.btn{width:100%;height:52px;background:#215182;color:#fff;border:none;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer;font-family:'Tajawal'}
+.msg{text-align:center;font-weight:800;margin-top:14px;min-height:24px}
+.ok{color:#27ae60}.no{color:#c0392b}
+</style>
+</head>
+<body>
+<div class="frame">
+<h1>شبكة المنيف للتحويلات</h1>
+<div class="sub">تسجيل الدخول</div>
+<input class="inp" id="u" placeholder="اسم المستخدم">
+<input class="inp" id="p" type="password" placeholder="كلمة المرور">
+<button class="btn" onclick="doLogin()">دخول</button>
+<div class="msg" id="m"></div>
+</div>
+<script>
+var B="https://yxmuwnlexogrlxpfmonj.supabase.co";
+var K="sb_publishable_eGwLrt0G_mAtZO-MNvRJig_RxWPrN8D";
+function doLogin(){
+  var u=document.getElementById('u').value.trim();
+  var p=document.getElementById('p').value;
+  var m=document.getElementById('m');
+  if(!u||!p){m.className='msg no';m.textContent='الرجاء إدخال البيانات';return;}
+  m.className='msg';m.textContent='جاري التحقق...';
+  var q=B+'/rest/v1/'+encodeURIComponent('مستخدمين_اندرويد')+'?'+encodeURIComponent('اسم_المستخدم')+'=eq.'+encodeURIComponent(u)+'&'+encodeURIComponent('كلمة_المرور')+'=eq.'+encodeURIComponent(p)+'&select=*';
+  fetch(q,{headers:{apikey:K}}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.length>0){
+      var x=d[0];
+      if(x['حالة_المستخدم']!=='معتمد'){m.className='msg no';m.textContent='الحساب غير معتمد';return;}
+      if(x['موقوف']){m.className='msg no';m.textContent='الحساب موقوف';return;}
+      m.className='msg ok';m.textContent='✅ تم الدخول بنجاح: '+x['اسم_الحساب'];
+    } else { m.className='msg no';m.textContent='❌ بيانات الدخول غير صحيحة'; }
+  }).catch(function(){m.className='msg no';m.textContent='تعذر الاتصال';});
+}
+</script>
+</body>
+</html>
