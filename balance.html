@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شبكة المنيف - استعلام الرصيد</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+body{background:linear-gradient(180deg,#16436B,#0d2b4a);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:15px}
+.frame{background:#fff;border-radius:20px;padding:25px;width:90%;max-width:400px;text-align:center}
+h1{color:#16436B;font-size:20px;margin-bottom:15px}
+input{width:100%;height:48px;border:1px solid #16436B;border-radius:10px;text-align:center;font-size:16px;margin-bottom:10px}
+button{width:100%;height:48px;background:#16436B;color:#fff;border:0;border-radius:10px;font-size:17px;font-weight:bold}
+#out{margin-top:15px;font-weight:bold;color:#16436B}
+.row{background:#e5ebf1;border-radius:10px;padding:10px;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="frame">
+<h1>شبكة المنيف - استعلام الرصيد</h1>
+<input id="acc" placeholder="رقم الحساب" inputmode="numeric">
+<button onclick="go()">استعلام</button>
+<div id="out"></div>
+</div>
+<script>
+var B="https://yxmuwnlexogrlxpfmonj.supabase.co";
+var K="sb_publishable_eGwLrt0G_mAtZO-MNvRJig_RxWPrN8D";
+var H={apikey:K,Authorization:"Bearer "+K};
+var curMap={};
+function send(action,payload,cb){
+  fetch(B+"/rest/v1/requests",{method:"POST",headers:{apikey:K,Authorization:"Bearer "+K,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify({action:action,payload:payload})}).then(function(r){return r.json();}).then(function(d){
+    var id=d[0].id,n=0;
+    var t=setInterval(function(){
+      n++;if(n>30){clearInterval(t);cb(null);}
+      fetch(B+"/rest/v1/requests?id=eq."+id+"&select=status,result",{headers:H}).then(function(r){return r.json();}).then(function(r){
+        if(r[0].status==="done"){clearInterval(t);cb(r[0].result);}
+      });
+    },1000);
+  });
+}
+send("get_currencies",{},function(res){if(res&&res.ok){res.currencies.forEach(function(c){curMap[c.id]=c.name;});}});
+function go(){
+  var a=document.getElementById("acc").value.trim();
+  var out=document.getElementById("out");
+  if(!a){out.textContent="ادخل رقم الحساب";return;}
+  out.textContent="جاري الاستعلام من المكتب...";
+  send("get_balance",{account_id:parseInt(a)},function(res){
+    if(!res){out.textContent="انتهت المهلة - تأكد ان العامل شغال";return;}
+    if(!res.ok){out.textContent="خطأ في الطلب";return;}
+    var html="";
+    res.balances.forEach(function(b){if(b.balance!==0){html+="<div class='row'>"+(curMap[b.currency]||("عملة "+b.currency))+": <b>"+b.balance+"</b></div>";}});
+    out.innerHTML=html||"لا يوجد رصيد";
+  });
+}
+</script>
+</body>
+</html>
